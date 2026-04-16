@@ -2,9 +2,9 @@
    1. DATABASE & PERSISTENCE LAYER
    ========================================= */
 const demoRooms = [
-    { id: 101, name: "Skyline Executive", price: 12500, status: "Available", img: "./images/room1.avif" },
-    { id: 102, name: "Urban Loft", price: 8500, status: "Available", img: "./images/room2.jpeg" },
-    { id: 103, name: "The Royal Suite", price: 25000, status: "Available", img: "./images/room3.jpg" }
+    { id: 101, name: "Skyline Executive", price: 12500, status: "Available", img: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1000" },
+    { id: 102, name: "Urban Loft", price: 8500, status: "Available", img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1000" },
+    { id: 103, name: "The Royal Suite", price: 25000, status: "Available", img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000" }
 ];
 
 let rooms = JSON.parse(localStorage.getItem("un_rooms")) || [];
