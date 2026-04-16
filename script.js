@@ -2,11 +2,10 @@
    1. DATABASE & PERSISTENCE LAYER
    ========================================= */
 const demoRooms = [
-    { id: 101, name: "Skyline Executive", price: 12500, status: "Available", img: "room1.avif" },
-    { id: 102, name: "Urban Loft", price: 8500, status: "Available", img: "room2.jpeg" },
-    { id: 103, name: "The Royal Suite", price: 25000, status: "Available", img: "room3.jpg" }
+    { id: 101, name: "Skyline Executive", price: 12500, status: "Available", img: "./images/room1.avif" },
+    { id: 102, name: "Urban Loft", price: 8500, status: "Available", img: "./images/room2.jpeg" },
+    { id: 103, name: "The Royal Suite", price: 25000, status: "Available", img: "./images/room3.jpg" }
 ];
-
 
 let rooms = JSON.parse(localStorage.getItem("un_rooms")) || [];
 let services = JSON.parse(localStorage.getItem("un_services")) || [];
@@ -257,10 +256,42 @@ function removeService(i) {
 /* =========================================
    8. REVIEWS (UNCHANGED)
    ========================================= */
-function openReviewModal(i) { /* unchanged */ }
-function setStar(n) { /* unchanged */ }
-function saveReview(suiteName) { /* unchanged */ }
-function deleteReview(id) { /* unchanged */ }
+function openReviewModal(i) {
+    activeRating = 0;
+    showModal(`
+        <h3>Rate ${rooms[i].name}</h3>
+        <div style="text-align:center; margin:15px 0;">
+            ${[1,2,3,4,5].map(n => `<span class="star" onclick="setStar(${n})" style="font-size:2rem; cursor:pointer; color:#ddd;">★</span>`).join('')}
+        </div>
+        <textarea id="revComment" class="login-field" placeholder="Experience..." style="height:60px;"></textarea>
+        <button onclick="saveReview('${rooms[i].name}')" class="btn-staff-sm" style="width:100%; margin-top:15px;">Submit</button>
+    `);
+}
+
+function setStar(n) {
+    activeRating = n;
+    const stars = document.querySelectorAll('.star');
+    stars.forEach((s, i) => s.style.color = (i < n) ? "#f1c40f" : "#ddd");
+}
+
+function saveReview(suiteName) {
+    if (activeRating === 0) return alert("Please select stars.");
+    const comment = document.getElementById("revComment").value.trim();
+    
+    reviews.push({ id: Date.now(), suite: suiteName, rating: activeRating, comment: comment || "No comment." });
+    localStorage.setItem("un_reviews", JSON.stringify(reviews));
+    
+    document.querySelector('.modal').remove();
+    renderRooms(); 
+}
+
+function deleteReview(reviewId) {
+    if (confirm("Delete this guest review?")) {
+        reviews = reviews.filter(rev => rev.id !== reviewId);
+        localStorage.setItem("un_reviews", JSON.stringify(reviews));
+        renderRooms();
+    }
+}
 
 /* =========================================
    9. MODAL (UNCHANGED)
