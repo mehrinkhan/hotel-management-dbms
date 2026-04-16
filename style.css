@@ -1,0 +1,271 @@
+/* =========================================
+   1. GLOBAL SETTINGS & BRANDING
+   ========================================= */
+:root {
+    --urban-gray: #545454;
+    --dark-text: #333333;
+    --light-gray: #888888;
+    --white: #ffffff;
+    --light-bg: #fafafa;
+    --border-color: #eeeeee;
+    --gold: #f1c40f;
+    --accent-red: #ff4d4d;
+    --font-main: 'Be Vietnam Pro', sans-serif;
+    --font-serif: 'Playfair Display', serif;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--white);
+    color: var(--urban-gray);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* =========================================
+   2. NAVIGATION (BIGGER LOGO: 120px)
+   ========================================= */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 5%; 
+    border-bottom: 1px solid var(--border-color);
+    background: var(--white);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.main-logo-lg {
+    height: 120px; 
+    width: auto;
+    transition: var(--transition);
+}
+
+nav ul { display: flex; gap: 30px; list-style: none; }
+
+nav ul li a {
+    text-decoration: none;
+    color: var(--urban-gray);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+#user-badge {
+    font-size: 0.55rem;
+    font-weight: 900;
+    background: #f4f4f4;
+    padding: 6px 12px;
+    color: #555;
+    margin-right: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* =========================================
+   3. HERO SECTION (RESTORED IMAGE)
+   ========================================= */
+.hero {
+    height: 65vh;
+    background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), 
+                url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2000') center/cover no-repeat;
+    display: flex; 
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center; 
+    color: white; 
+    text-align: center;
+    border-bottom: 5px solid var(--urban-gray);
+}
+
+.hero h1 { 
+    font-size: 4.5rem; 
+    text-transform: uppercase; 
+    letter-spacing: 15px; 
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 15px rgba(0,0,0,0.4);
+}
+
+.hero p {
+    font-size: 0.8rem;
+    letter-spacing: 6px;
+    font-weight: 400;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.9);
+}
+
+/* =========================================
+   4. DASHBOARD & CARDS
+   ========================================= */
+.welcome-intro { padding: 80px 15%; text-align: center; }
+
+.playfair-text {
+    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    line-height: 2;
+    color: #333;
+    font-style: italic;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.mgmt-section { padding: 60px 5%; background: var(--light-bg); min-height: 500px; }
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.mgmt-card {
+    background: white; 
+    padding: 45px; 
+    border: 1px solid var(--border-color);
+    text-align: center; 
+    transition: var(--transition);
+}
+
+.mgmt-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,0,0,0.06); }
+
+/* =========================================
+   5. STAR RATING SYSTEM
+   ========================================= */
+.star-rating { 
+    font-size: 2.5rem; 
+    margin: 20px 0; 
+    text-align: center; 
+}
+
+.star { 
+    cursor: pointer; 
+    color: #ddd; 
+    transition: 0.2s ease-in-out; 
+    padding: 0 5px; 
+    display: inline-block;
+}
+
+.star.active { 
+    color: var(--gold); 
+    transform: scale(1.1);
+}
+
+/* =========================================
+   6. BUTTONS & UI
+   ========================================= */
+.btn-staff-sm, .btn-guest-sm {
+    font-family: var(--font-main);
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 14px 22px;
+    cursor: pointer;
+    letter-spacing: 1.5px;
+    transition: var(--transition);
+    border: 1.5px solid var(--urban-gray);
+    display: inline-block;
+    text-decoration: none;
+}
+
+.btn-staff-sm { background: var(--urban-gray); color: white; }
+.btn-guest-sm { background: transparent; color: var(--urban-gray); }
+
+.btn-logout-sm {
+    text-decoration: none; 
+    color: var(--accent-red); 
+    font-size: 0.6rem;
+    font-weight: 800; 
+    border: 1.5px solid var(--accent-red); 
+    padding: 8px 15px;
+}
+
+/* =========================================
+   7. MODALS & FORMS
+   ========================================= */
+.modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); display: flex;
+    justify-content: center; align-items: center; z-index: 2000;
+}
+
+.modal-content {
+    background: white; width: 450px; padding: 45px; position: relative;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+
+.login-field {
+    width: 100%;
+    padding: 12px;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+    background: #fafafa;
+    font-family: inherit;
+    margin-top: 5px;
+}
+
+/* =========================================
+   8. TABLES (BDT ৳)
+   ========================================= */
+.table-box { background: white; padding: 35px; border: 1px solid var(--border-color); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 18px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.8rem; }
+th { text-transform: uppercase; color: #aaa; background: #fafafa; letter-spacing: 1px; }
+
+.status-badge { font-size: 0.55rem; font-weight: 800; padding: 5px 12px; text-transform: uppercase; }
+.status-green { background: #e8f5e9; color: #2e7d32; }
+.status-red { background: #ffebee; color: #c62828; }
+
+/* =========================================
+   9. FOOTER
+   ========================================= */
+footer {
+    padding: 50px 5%; text-align: center;
+    font-size: 0.65rem; color: #bbb;
+    letter-spacing: 2px; text-transform: uppercase;
+    border-top: 1px solid var(--border-color);
+
+    /* =========================================
+   10. SERVICE SELECTION (ADDED ONLY)
+   ========================================= */
+
+.service-box {
+    margin-right: 8px;
+    transform: scale(1.1);
+    cursor: pointer;
+}
+
+.service-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    padding: 6px 0;
+    color: var(--urban-gray);
+}
+
+.service-container {
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    margin-top: 10px;
+    background: #fff;
+    border-radius: 4px;
+}
+
+.service-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #666;
+}
+}

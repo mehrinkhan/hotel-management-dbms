@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Service Management | Urban Nest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <img src="./images/logo.png" alt="Urban Nest" class="main-logo-lg">
+        <nav>
+            <ul>
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="rooms.html">Suites</a></li>
+                <li class="active"><a href="services.html">Services</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="mgmt-section">
+        <div class="table-box" style="max-width: 600px; margin: 0 auto;">
+            <h2 style="font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 30px; text-align: center;">Service Configuration</h2>
+            
+            <div style="background: #fdfdfd; padding: 25px; border: 1px solid #eee; margin-bottom: 40px;">
+                <p style="font-size: 0.6rem; font-weight: 800; margin-bottom: 15px; color: #aaa;">ADD NEW AMENITY</p>
+                <input type="text" id="newSvcName" class="login-field" placeholder="e.g. Premium Spa Package">
+                <input type="number" id="newSvcPrice" class="login-field" placeholder="Price in ৳ (BDT)" style="margin-top: 10px;">
+                <button onclick="addService()" class="btn-staff-sm" style="width: 100%; margin-top: 20px;">Register Service</button>
+            </div>
+
+            <p style="font-size: 0.6rem; font-weight: 800; margin-bottom: 10px; color: #aaa;">CURRENT OFFERINGS</p>
+            <div id="serviceList" style="background: white; border: 1px solid #eee;">
+                </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entry | Urban Nest Luxury Suites</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Centering and Balanced Scaling */
+        .login-viewport {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
+                        url('https://images.unsplash.com/photo-1445019980597-93fa8acb246c?q=80&w=2000') center/cover;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 440px; 
+            padding: 50px;
+            background: white;
+            text-align: center;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+        }
+
+        /* LOGO: Made Bigger */
+        .main-logo-lg {
+            height: 140px; 
+            width: auto;
+            margin-bottom: 10px;
+        }
+
+        .portal-subtext {
+            font-size: 0.6rem; 
+            letter-spacing: 4px; 
+            color: #bbb; 
+            margin-bottom: 35px;
+            text-transform: uppercase;
+        }
+
+        /* FORM ELEMENTS: Made slightly smaller for balance */
+        .role-selector {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 25px;
+        }
+
+        .role-btn {
+            flex: 1;
+            padding: 14px;
+            font-size: 0.7rem; 
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            color: #ccc;
+            border: none;
+            background: none;
+            transition: 0.3s;
+        }
+
+        .role-btn.active {
+            color: var(--urban-gray);
+            border-bottom: 2px solid var(--urban-gray);
+        }
+
+        .login-form {
+            display: none;
+            text-align: left;
+        }
+
+        .login-form.active {
+            display: block;
+        }
+
+        .login-form label {
+            font-size: 0.65rem !important; 
+            font-weight: 800;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .login-field {
+            width: 100%;
+            padding: 12px !important; 
+            font-size: 0.9rem !important; 
+            border: 1px solid #eee;
+            font-family: inherit;
+            background: #fafafa;
+            margin-top: 5px;
+        }
+
+        .btn-login-full {
+            width: 100%;
+            padding: 15px !important;
+            font-size: 0.75rem !important;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: var(--urban-gray);
+            color: white;
+            border: none;
+            margin-top: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-login-full:hover {
+            background: #333;
+        }
+
+        .public-link {
+            display: block;
+            margin-top: 35px;
+            font-size: 0.55rem;
+            color: #ddd;
+            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body class="login-viewport">
+
+    <div class="login-card">
+        <img src="./images/logo.png" alt="Urban Nest" class="main-logo-lg">
+        <p class="portal-subtext">Residence Access Portal</p>
+
+        <div class="role-selector">
+            <button id="staff-tab" class="role-btn active" onclick="switchTab('admin')">Staff Access</button>
+            <button id="guest-tab" class="role-btn" onclick="switchTab('guest')">Resident Access</button>
+        </div>
+
+        <form id="admin-form" class="login-form active" onsubmit="handleLogin(event, 'admin')">
+            <div class="input-group">
+                <label>Staff Identification</label>
+                <input type="text" class="login-field" placeholder="Username" required>
+            </div>
+            <div class="input-group" style="margin-top:15px;">
+                <label>Access Key</label>
+                <input type="password" class="login-field" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-login-full">Authorize Staff</button>
+        </form>
+
+        <form id="guest-form" class="login-form" onsubmit="handleLogin(event, 'guest')">
+            <div class="input-group">
+                <label>Resident Email</label>
+                <input type="email" class="login-field" placeholder="Email Address" required>
+            </div>
+            <div class="input-group" style="margin-top:15px;">
+                <label>Booking Ref</label>
+                <input type="text" class="login-field" placeholder="e.g. UN-2026" required>
+            </div>
+            <button type="submit" class="btn-login-full" style="background: #f4f4f4; color: #333; border: 1px solid #ddd;">Enter Portal</button>
+        </form>
+
+        <a href="index.html" class="public-link">Browse Public Gallery</a>
+    </div>
+
+    <script>
+        function switchTab(role) {
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            if(role === 'admin') document.getElementById('staff-tab').classList.add('active');
+            else document.getElementById('guest-tab').classList.add('active');
+
+            document.querySelectorAll('.login-form').forEach(form => form.classList.remove('active'));
+            document.getElementById(role + '-form').classList.add('active');
+        }
+
+        function handleLogin(e, role) {
+            e.preventDefault();
+            localStorage.setItem("userRole", role);
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
