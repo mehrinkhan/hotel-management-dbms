@@ -1,14 +1,53 @@
 /* =========================================
-   1. DATABASE & PERSISTENCE LAYER
+   1. DATABASE & PERSISTENCE LAYER (FIXED)
    ========================================= */
+
+// These act as the "Master Copy" for GitHub Pages
 const demoRooms = [
-    { id: 101, name: "Skyline Executive", price: 12500, status: "Available", img: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1000" },
-    { id: 102, name: "Urban Loft", price: 8500, status: "Available", img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1000" },
-    { id: 103, name: "The Royal Suite", price: 25000, status: "Available", img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000" }
+    { 
+        id: 101, 
+        name: "Skyline Executive", 
+        price: 12500, 
+        status: "Available", 
+        img: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1000" 
+    },
+    { 
+        id: 102, 
+        name: "Urban Loft", 
+        price: 8500, 
+        status: "Available", 
+        img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1000" 
+    },
+    { 
+        id: 103, 
+        name: "The Royal Suite", 
+        price: 25000, 
+        status: "Available", 
+        img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000" 
+    }
 ];
 
-let rooms = JSON.parse(localStorage.getItem("un_rooms")) || [];
-let services = JSON.parse(localStorage.getItem("un_services")) || [];
+const demoServices = [
+    { name: "Luxury Buffet Breakfast", price: 1500 },
+    { name: "Airport Pickup (Tesla S)", price: 3000 },
+    { name: "Full Body Spa", price: 5000 }
+];
+
+// 1. Load Rooms: If localStorage is empty, use demoRooms
+let rooms = JSON.parse(localStorage.getItem("un_rooms"));
+if (!rooms || rooms.length === 0) {
+    rooms = demoRooms;
+    localStorage.setItem("un_rooms", JSON.stringify(rooms));
+}
+
+// 2. Load Services: If empty, use demoServices
+let services = JSON.parse(localStorage.getItem("un_services"));
+if (!services || services.length === 0) {
+    services = demoServices;
+    localStorage.setItem("un_services", JSON.stringify(services));
+}
+
+// 3. Load Records and Reviews (keep these as empty arrays if new)
 let records = JSON.parse(localStorage.getItem("un_records")) || [];
 let reviews = JSON.parse(localStorage.getItem("un_reviews")) || [];
 
