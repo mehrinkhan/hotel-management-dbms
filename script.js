@@ -267,15 +267,25 @@ function toggleRoomStatus(i) {
  */
 function renderServiceManager() {
     const list = document.getElementById("serviceList");
-    if (!list) return;
+    if (!list) return; // Exit if we aren't on the services.html page
+
+    if (services.length === 0) {
+        list.innerHTML = `<p style="color: #bbb; text-align: center; padding: 20px;">No services currently configured.</p>`;
+        return;
+    }
 
     list.innerHTML = services.map((s, i) => `
-        <div style="display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid #f0f0f0; align-items:center;">
+        <div style="display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid #f4f4f4; align-items:center; transition: 0.3s;">
             <div>
-                <span style="font-size:0.85rem; font-weight:700;">${s.name}</span>
-                <p style="margin:0; font-size:0.7rem; color:#888;">Cost: ৳${s.price.toLocaleString()}</p>
+                <span style="font-weight:700; display:block; color: #333;">${s.name}</span>
+                <span style="font-size:0.75rem; color:#888;">Standard Charge: ৳${s.price.toLocaleString()}</span>
             </div>
-            <button onclick="removeService(${i})" style="color:#e74c3c; background:none; border:none; cursor:pointer; font-size:1.5rem;">&times;</button>
+            <button onclick="removeService(${i})" 
+                    style="color:#e74c3c; background:#fdf2f2; border:1px solid #fee2e2; border-radius: 4px; padding: 5px 12px; cursor:pointer; font-size:0.8rem; font-weight:bold; transition: 0.2s;"
+                    onmouseover="this.style.background='#fde2e2'" 
+                    onmouseout="this.style.background='#fdf2f2'">
+                DELETE
+            </button>
         </div>`).join('');
 }
 
@@ -323,6 +333,28 @@ function addService() {
     renderUI();
     
     alert(`Success: ${nameValue} has been added to the service menu.`);
+}
+
+/**
+ * removeService: Permanently deletes a service from the database.
+ * @param {number} i - The index of the service in the array.
+ */
+function removeService(i) {
+    // 1. Ask for confirmation so you don't delete by accident during a demo
+    const confirmation = confirm(`Are you sure you want to remove "${services[i].name}"?`);
+    
+    if (confirmation) {
+        // 2. Remove the specific service from the array
+        services.splice(i, 1);
+        
+        // 3. Save the updated list to LocalStorage
+        saveData(); 
+        
+        // 4. Refresh the UI so the item disappears immediately
+        renderUI();
+        
+        console.log("Service removed successfully.");
+    }
 }
 
 /**
