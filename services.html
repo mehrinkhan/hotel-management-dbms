@@ -3,43 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <title>Service Config | Urban Nest</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=999">
 </head>
 <body>
     <header class="navbar">
-        <div class="logo-container"><img src="./images/logo.png" alt="Urban Nest" class="main-logo-lg"></div>
+        <div class="logo-container">
+            <img src="logo.png" alt="Urban Nest" class="main-logo-lg">
+        </div>
         <nav>
             <ul id="nav-menu">
                 <li><a href="index.html">Dashboard</a></li>
                 <li><a href="rooms.html">Suites</a></li>
-                <li class="admin-only"><a href="customers.html">Database</a></li>
+                <li class="admin-only"><a href="roomdb.html">ROOMDB</a></li>
+                <li class="admin-only"><a href="customers.html">GUESTDB</a></li>
+                <li class="admin-only"><a href="approvals.html">Approvals</a></li>
                 <li class="active admin-only"><a href="services.html">Services</a></li>
                 <li><a href="payments.html">Payments</a></li>
             </ul>
         </nav>
+        <div class="system-access-header">
+            <span id="user-badge">SECURE ACCESS</span>
+            <a href="login.html" class="btn-logout-sm">Sign Out</a>
+        </div>
     </header>
 
     <main class="mgmt-section">
-        <div class="container" style="max-width: 800px; margin: 0 auto; padding: 40px 20px;">
-            <h2 style="text-align:center; letter-spacing: 3px; color: #bbb; text-transform: uppercase; margin-bottom: 30px;">Service Configuration</h2>
+        <div style="max-width: 900px; margin: 0 auto;">
+            <h2 style="text-align:center; letter-spacing: 5px; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 50px; font-size: 0.8rem;">Service Configuration</h2>
 
-            <div class="mgmt-card" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px;">
-                <h3 style="margin-bottom: 15px;">Add New Amenity</h3>
-                <div style="display: flex; gap: 15px;">
-                    <input type="text" id="svcName" placeholder="Service Name (e.g., Spa)" style="flex: 2; padding: 12px; border: 1px solid #eee; border-radius: 4px;">
-                    <input type="number" id="svcPrice" placeholder="Price (৳)" style="flex: 1; padding: 12px; border: 1px solid #eee; border-radius: 4px;">
+            <div class="mgmt-card" style="margin-bottom: 40px; text-align: left;">
+                <h3 style="margin-bottom: 25px;">Add New Amenity</h3>
+                <div style="display: flex; gap: 20px;">
+                    <div style="flex: 2;">
+                        <label style="font-size: 0.6rem; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px;">Service Name</label>
+                        <input type="text" id="svcName" class="login-field" placeholder="e.g., Private Spa Session" style="width: 100%;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 0.6rem; font-weight: 800; color: #aaa; text-transform: uppercase; letter-spacing: 1px;">Price (৳)</label>
+                        <input type="number" id="svcPrice" class="login-field" placeholder="0.00" style="width: 100%;">
+                    </div>
                 </div>
-                <button onclick="addService()" class="btn-staff-sm" style="margin-top: 20px; width: 100%; height: 45px;">Add to Menu</button>
+                <button onclick="addService()" class="btn-staff-sm" style="margin-top: 30px; width: 100%;">Add to Management Menu</button>
             </div>
 
-            <div class="mgmt-card" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                <h3 style="margin-bottom: 20px; border-bottom: 1px solid #f4f4f4; padding-bottom: 10px;">Current Service Menu</h3>
+            <div class="mgmt-card" style="text-align: left;">
+                <h3 style="margin-bottom: 30px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px;">Active Amenities</h3>
                 <div id="serviceList">
-                    </div>
+                </div>
             </div>
         </div>
     </main>
 
-    <script src="script.js"></script>
+
+    <script src="script.js?v=999"></script>
 </body>
 </html>
