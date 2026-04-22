@@ -4,20 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | Urban Nest Luxury Residences</title>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Playfair+Display:ital,wght@1,300;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=999">
 </head>
 <body>
 
     <header class="navbar">
-        <div class="./images/logo.pnglogo-container">
+        <div class="logo-container">
             <img src="logo.png" alt="Urban Nest" class="main-logo-lg">
         </div>
         <nav>
             <ul id="nav-menu">
                 <li class="active"><a href="index.html">Dashboard</a></li>
                 <li><a href="rooms.html">Suites</a></li>
-                <li class="admin-only"><a href="customers.html">Database</a></li>
+                <li class="admin-only"><a href="roomdb.html">ROOMDB</a></li>
+                <li class="admin-only"><a href="customers.html">GUESTDB</a></li>
+                <li class="admin-only"><a href="approvals.html">Approvals</a></li>
                 <li class="admin-only"><a href="services.html">Services</a></li>
                 <li><a href="payments.html">Payments</a></li>
             </ul>
@@ -30,13 +32,15 @@
 
     <section class="hero">
         <div class="hero-content">
-            <h1>Urban Nest</h1>
-            <p>REFINED ELEGANCE • DISCRETE LUXURY</p>
+            <h1>URBAN NEST</h1>
+            <p>Refined Elegance • Discrete Luxury</p>
+            <div class="scroll-indicator"></div>
         </div>
     </section>
 
     <section class="welcome-intro">
         <div class="intro-container">
+            <h2 style="font-size: 0.7rem; letter-spacing: 5px; color: var(--accent-gold); text-transform: uppercase; margin-bottom: 20px;">The Urban Experience</h2>
             <p class="playfair-text">
                 Welcome to Urban Nest. Our management portal allows for seamless coordination of our luxury residences, ensuring every guest experiences the pinnacle of hospitality.
             </p>
@@ -49,19 +53,34 @@
             <h2 style="text-align:center; font-size: 0.7rem; letter-spacing: 3px; color: #bbb; margin-bottom: 40px; text-transform: uppercase;">Management Control Panel</h2>
             <div class="grid-container">
                 <div class="mgmt-card">
-                    <h3>Guest Database</h3>
-                    <p>Add, update, or remove resident records and contact information.</p>
-                    <a href="customers.html" class="btn-staff-sm" style="margin-top:15px;">Manage Database</a>
+                    <h3>GUESTDB</h3>
+                    <p>Access the unified resident registry and contact information.</p>
+                    <a href="customers.html" class="btn-staff-sm" style="margin-top:15px;">Enter GUESTDB</a>
                 </div>
                 <div class="mgmt-card">
-                    <h3>Service Config</h3>
-                    <p>Add new amenities or update pricing for existing services in ৳ (BDT).</p>
-                    <a href="services.html" class="btn-staff-sm" style="margin-top:15px;">Configure Menu</a>
+                    <h3>ROOMDB</h3>
+                    <p>View tabular data, nightly rates, and current status markers.</p>
+                    <a href="roomdb.html" class="btn-staff-sm" style="margin-top:15px;">Enter ROOMDB</a>
                 </div>
                 <div class="mgmt-card">
-                    <h3>Suite Status</h3>
-                    <p>Monitor real-time room availability and toggle occupancy statuses.</p>
-                    <a href="rooms.html" class="btn-staff-sm" style="margin-top:15px;">Room Control</a>
+                    <h3>Suites</h3>
+                    <p>Visual suite status, occupancy logistics, and inventory control.</p>
+                    <a href="rooms.html" class="btn-staff-sm" style="margin-top:15px;">Inventory</a>
+                </div>
+                <div class="mgmt-card">
+                    <h3>Accounting</h3>
+                    <p>Monitor transaction history, approve billing, and print invoices.</p>
+                    <a href="payments.html" class="btn-staff-sm" style="margin-top:15px;">Payments</a>
+                </div>
+                <div class="mgmt-card">
+                    <h3>Approvals</h3>
+                    <p>Review and accept or reject pending guest check-in requests.</p>
+                    <a href="approvals.html" class="btn-staff-sm" style="margin-top:15px;">Manage Approvals</a>
+                </div>
+                <div class="mgmt-card">
+                    <h3>Services</h3>
+                    <p>Configure luxury amenities and adjust service pricing in ৳.</p>
+                    <a href="services.html" class="btn-staff-sm" style="margin-top:15px;">Configure</a>
                 </div>
             </div>
         </div>
@@ -93,6 +112,6 @@
         <p>&copy; 2026 URBAN NEST LUXURY SUITES • DHAKA, BANGLADESH</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=999"></script>
 </body>
 </html>
