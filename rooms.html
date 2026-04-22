@@ -4,20 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suites | Urban Nest Luxury Residences</title>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Playfair+Display:ital,wght@1,300;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=999">
 </head>
 <body>
 
     <header class="navbar">
         <div class="logo-container">
-            <img src="./images/logo.png" alt="Urban Nest" class="main-logo-lg">
+            <img src="logo.png" alt="Urban Nest" class="main-logo-lg">
         </div>
         <nav>
             <ul id="nav-menu">
                 <li><a href="index.html">Dashboard</a></li>
                 <li class="active"><a href="rooms.html">Suites</a></li>
-                <li class="admin-only"><a href="customers.html">Database</a></li>
+                <li class="admin-only"><a href="roomdb.html">ROOMDB</a></li>
+                <li class="admin-only"><a href="customers.html">GUESTDB</a></li>
+                <li class="admin-only"><a href="approvals.html">Approvals</a></li>
                 <li class="admin-only"><a href="services.html">Services</a></li>
                 <li><a href="payments.html">Payments</a></li>
             </ul>
@@ -45,22 +47,6 @@
         <p>&copy; 2026 URBAN NEST LUXURY SUITES • DHAKA, BANGLADESH</p>
     </footer>
 
-    <script src="script.js"></script>
-    
-    <script>
-        // Safety check: If for some reason the global window.onload in script.js 
-        // doesn't trigger correctly for the grid, we call it specifically here.
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof renderRooms === "function") {
-                renderRooms();
-            }
-            
-            // Re-verify Role Visibility
-            const role = localStorage.getItem("userRole") || "guest";
-            document.querySelectorAll(".admin-only").forEach(el => {
-                el.style.display = (role === "admin" ? "block" : "none");
-            });
-        });
-    </script>
+    <script src="script.js?v=999"></script>
 </body>
 </html>
