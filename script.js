@@ -1,92 +1,182 @@
-/**
- * ============================================================
- * URBAN NEST: LUXURY SUITE MANAGEMENT SYSTEM
- * Academic Project - North South University
- * ------------------------------------------------------------
- * This script handles:
- * 1. Persistent Storage (LocalStorage)
- * 2. Role-based UI Rendering (Admin vs Resident)
- * 3. Dynamic Price Calculation (Nights + Services)
- * 4. Guest Record Management (CRM)
- * 5. Suite Inventory and Service Configuration
- * ============================================================
- */
-
-/* =========================================
-   1. DATABASE & PERSISTENCE LAYER
-   ========================================= */
-
-// Default data used only on the first ever load or if storage is cleared
-const demoRooms = [
-    { id: 101, name: "Skyline Executive", price: 12500, status: "Available", img: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1000" },
-    { id: 102, name: "Urban Loft", price: 8500, status: "Available", img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?q=80&w=1000" },
-    { id: 103, name: "The Royal Suite", price: 25000, status: "Available", img: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1000" }
-];
-
-const demoServices = [
-    { name: "Luxury Buffet Breakfast", price: 1500 },
-    { name: "Airport Pickup (Tesla S)", price: 3000 },
-    { name: "Full Body Spa", price: 5000 }
-];
-
-/** * Data Synchronization: We pull from LocalStorage to keep progress 
- * even after browser refreshes (crucial for GitHub Pages).
- */
-let rooms = JSON.parse(localStorage.getItem("un_rooms")) || demoRooms;
-let services = JSON.parse(localStorage.getItem("un_services")) || demoServices;
-let records = JSON.parse(localStorage.getItem("un_records")) || [];
-let reviews = JSON.parse(localStorage.getItem("un_reviews")) || [];
+let rooms = [];
+let services = [];
+let records = [];
+let reviews = [];
+let adminRecords = [];
+let pendingBookings = [];
+let currentUser = null;
 let activeRating = 0;
 
-// Internal helper to save all state to LocalStorage
-function saveData() {
-    localStorage.setItem("un_rooms", JSON.stringify(rooms));
-    localStorage.setItem("un_services", JSON.stringify(services));
-    localStorage.setItem("un_records", JSON.stringify(records));
-    localStorage.setItem("un_reviews", JSON.stringify(reviews));
+async function fetchInitialData() {
+    try {
+        let response = await fetch('api.php?action=get_initial_data&t=' + Date.now());
+        let data = await response.json();
+        if (data) {
+            console.log("Database Refresh Successful. Records found:", data.records ? data.records.length : 0);
+            if (data.records && data.records.length > 0) {
+                console.table(data.records.slice(0, 5)); // Show first 5 for verification
+            }
+            rooms = data.rooms || [];
+            services = data.services || [];
+            records = data.records || [];
+            adminRecords = data.adminRecords || [];
+            pendingBookings = data.pendingBookings || [];
+            reviews = data.reviews || [];
+            currentUser = data.currentUser || null;
+            
+            if (data.debug_customers) {
+                console.log("Raw Customer Table Check (Count):", data.debug_customers.length);
+                const queryAnya = data.debug_customers.find(c => c.name.toLowerCase().includes("anya"));
+                if (queryAnya) console.log("FOUND ANYA in raw table!", queryAnya);
+                else console.log("Anya Forger NOT found in live customer table.");
+            }
+            
+            // Sync with legacy localStorage keys for pages that use them
+            localStorage.setItem("un_records", JSON.stringify(records));
+            localStorage.setItem("un_payment_records", JSON.stringify(data.paymentRecords || []));
+            localStorage.setItem("un_rooms", JSON.stringify(rooms));
+            localStorage.setItem("un_services", JSON.stringify(services));
+            
+            renderUI();
+        }
+    } catch (e) {
+        console.error("CRITICAL: Failed to load data from database", e);
+    }
 }
-
-// Initial force-save for first-time visitors
-if (!localStorage.getItem("un_rooms")) saveData();
-
-/* =========================================
-   2. APP INITIALIZATION & ROUTING
-   ========================================= */
 
 function initApp() {
     console.log("Urban Nest Application Initializing...");
-    const role = localStorage.getItem("userRole") || "guest";
+    const role = localStorage.getItem("userRole"); // No default here
     const badge = document.getElementById("user-badge");
     
-    // UI Feedback for current access level
     if (badge) {
-        badge.innerText = (role === "admin" ? "STAFF ACCESS" : "RESIDENT PORTAL");
+        badge.innerText = (role === "admin" ? "STAFF ACCESS" : (role === "guest" ? "RESIDENT PORTAL" : "GUEST PREVIEW"));
     }
 
     const staffDash = document.getElementById("staff-view");
     const guestDash = document.getElementById("guest-view");
 
-    // Toggle view availability
     if (staffDash) staffDash.style.display = (role === "admin" ? "block" : "none");
     if (guestDash) guestDash.style.display = (role === "guest" ? "block" : "none");
 
-    renderUI();
+    // Hide admin-only navigation links
+    document.querySelectorAll(".admin-only").forEach(el => {
+        el.style.display = (role === "admin" ? "list-item" : "none");
+    });
+    
+    // If absolutely no role (Public Gallery), maybe hide some other things
+    if (!role) {
+        console.log("Public View Mode Active");
+    }
+
+    fetchInitialData();
+    // Enable automatic background updates every 5 seconds
+    setInterval(fetchInitialData, 5000);
+
+    // Scroll Effect for Navbar
+    window.addEventListener('scroll', () => {
+        const nav = document.querySelector('.navbar');
+        if (window.scrollY > 50) nav.classList.add('scrolled');
+        else nav.classList.remove('scrolled');
+    });
+
+    // Intersection Observer for Animations
+    const observerOptions = { threshold: 0.1 };
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('appear');
+            }
+        });
+    }, observerOptions);
+
+    setTimeout(() => {
+        document.querySelectorAll('.mgmt-card, .welcome-intro, .table-box').forEach(el => {
+            el.classList.add('fade-in');
+            observer.observe(el);
+        });
+    }, 500);
 }
 
-/**
- * renderUI acts as a central hub to refresh all dynamic parts of the DOM.
- */
 function renderUI() {
     if (document.getElementById("roomGrid")) renderRooms();
     if (document.getElementById("customerTable")) renderCustomerTable();
     if (document.getElementById("serviceList")) renderServiceManager();
+    if (document.getElementById("approvalsTable")) renderApprovalsPage();
+    // Allow page-specific overrides like payments.html
+    if (typeof renderPaymentsPage === "function") renderPaymentsPage();
 }
 
 window.onload = initApp;
 
-/* =========================================
-   3. ROOM & BOOKING LOGIC
-   ========================================= */
+// Premium Notification System
+function showStatusModal(title, msg, isSuccess = true) {
+    const statusHtml = `
+    <div id="statusModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:10001; backdrop-filter:blur(8px); animation: fadeIn 0.3s ease;">
+        <div class="mgmt-card" style="width:450px; padding:60px 40px; border-top: 4px solid ${isSuccess ? '#2ecc71' : '#e74c3c'}; animation: slideUp 0.4s ease-out; background:white;">
+            <div style="font-size:3.5rem; margin-bottom:25px; color:${isSuccess ? '#2ecc71' : '#e74c3c'};">${isSuccess ? '✓' : '✕'}</div>
+            <h4 style="letter-spacing:3px; color:var(--primary-dark); margin-bottom:20px; font-size:0.75rem; text-transform:uppercase; font-weight:800;">${title}</h4>
+            <p style="font-size:1rem; color:#666; margin-bottom:35px; line-height:1.6;">${msg}</p>
+            <button onclick="document.getElementById('statusModal').remove()" class="btn-staff-full" style="background:var(--primary-dark); color:white; height:50px; border:none; letter-spacing:2px; cursor:pointer; width:100%;">ACKNOWLEDGE</button>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', statusHtml);
+}
+
+// Custom Modal for Suite Logistics (Staff Only)
+function showLogistics(index) {
+    const room = rooms[index];
+    if (!room) return;
+
+    // Sanitize input: If name is 'Unknown' or falsy, set to 'No Resident'
+    const occupant = (!room.occupantName || room.occupantName === 'Unknown' || room.occupantName === 'null') ? 'Vacant / No Resident' : room.occupantName;
+    const occupantId = (!room.occupantId || room.occupantId === 0 || room.occupantId === 'null' || room.occupantId === 'undefined') ? 'N/A' : '#C-' + String(room.occupantId).padStart(4, '0');
+
+    const modalHtml = `
+    <div id="logisticsModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:10000; backdrop-filter:blur(8px); animation: fadeIn 0.3s ease;">
+        <div class="mgmt-card" style="width:420px; padding:45px; border-top: 4px solid var(--accent-gold); animation: slideUp 0.4s ease-out; background:white;">
+            <h4 style="letter-spacing:4px; color:var(--accent-gold); margin-bottom:25px; font-size:0.7rem; text-transform:uppercase; font-weight:800;">Logistics | Suite #${room.id}</h4>
+            <div style="margin-bottom:30px; text-align:left; border-left: 2px solid #eee; padding-left: 20px;">
+                <p style="font-size:0.65rem; color:#aaa; text-transform:uppercase; margin-bottom:8px; font-weight:700; letter-spacing:1px;">Active Resident</p>
+                <p style="font-size:1.2rem; color:var(--primary-dark); font-family:var(--font-serif); font-style:italic;">${occupant}</p>
+            </div>
+            <div style="margin-bottom:35px; text-align:left; border-left: 2px solid #eee; padding-left: 20px;">
+                <p style="font-size:0.65rem; color:#aaa; text-transform:uppercase; margin-bottom:8px; font-weight:700; letter-spacing:1px;">Identification</p>
+                <p style="font-size:1.1rem; color:var(--primary-dark); font-weight:700;">${occupantId}</p>
+            </div>
+            <button onclick="document.getElementById('logisticsModal').remove()" class="btn-staff-full" style="background:var(--accent-gold); color:white; height:50px; cursor:pointer; width:100%; border:none; letter-spacing:2px; font-weight:700; text-transform:uppercase;">DISMISS RECORD</button>
+        </div>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// Show Room Description
+function showDetails(index) {
+    const room = rooms[index];
+    if (!room) return;
+
+    const descriptions = {
+        "Skyline Executive Series": "A sophisticated haven featuring panoramic city views, high-speed fiber connectivity, and a dedicated workspace for the modern professional. Includes access to the exclusive executive lounge.",
+        "Urban Loft Classic": "Elegant simplicity meets industrial chic. This spacious loft features exposed brick accents, custom hardwood floors, and floor-to-ceiling windows that bathe the room in natural light.",
+        "The Royal Penthouse": "The pinnacle of luxury. Spread across the top two floors, this palatial suite offers a private terrace, infinity plunge pool, and personalized butler service for our most discerning guests."
+    };
+
+    const desc = descriptions[room.name] || "A premium luxury suite designed for ultimate comfort and tranquility. Featuring world-class amenities and bespoke furnishings.";
+
+    showModal(`
+        <h3 style="font-family:var(--font-serif); font-style:italic; margin-bottom:15px;">Suite Discovery</h3>
+        <p style="font-size:0.7rem; color:var(--accent-gold); letter-spacing:2px; font-weight:700; margin-bottom:20px;">${room.name.toUpperCase()}</p>
+        <div style="text-align:left; line-height:1.8; color:#555; padding:0 10px;">
+            <p>${desc}</p>
+            <div style="margin-top:25px; border-top:1px solid #eee; padding-top:20px; display:grid; grid-template-columns:1fr 1fr; gap:15px; font-size:0.75rem;">
+                <div><strong style="color:var(--primary-dark);">Occupancy:</strong> 2 Adults</div>
+                <div><strong style="color:var(--primary-dark);">View:</strong> Metropolitan</div>
+                <div><strong style="color:var(--primary-dark);">Size:</strong> ${room.id === 3 ? '2400' : '850'} sq.ft</div>
+                <div><strong style="color:var(--primary-dark);">Service:</strong> 24/7 Butler</div>
+            </div>
+        </div>
+    `);
+}
 
 function renderRooms() {
     const grid = document.getElementById("roomGrid");
@@ -95,179 +185,250 @@ function renderRooms() {
 
     grid.innerHTML = rooms.map((room, i) => {
         const isOccupied = room.status === "Occupied";
+        const canCheckout = isOccupied && (role === 'admin' || (currentUser && String(room.occupantId) === String(currentUser.id)));
+        
         return `
-        <div class="mgmt-card" style="padding:0; overflow:hidden; text-align:left; border:1px solid #ddd; border-radius:8px;">
-            <div style="height:200px; background:url('${room.img}') center/cover;"></div>
-            <div style="padding:25px;">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <span style="font-size:0.55rem; font-weight:800; color:#aaa;">SUITE ID: ${room.id}</span>
-                    <span class="status-badge ${isOccupied ? 'status-red' : 'status-green'}">${room.status}</span>
+        <div class="mgmt-card suite-card-premium" style="padding:0; overflow:hidden; text-align:left;">
+            <div style="height:250px; background:url('${room.img}') center/cover; position:relative;">
+                <span class="status-badge ${isOccupied ? 'status-red' : 'status-green'}" 
+                      style="position:absolute; top:20px; right:20px; background:${isOccupied ? '#e74c3c' : '#2ecc71'}; color:white; font-weight:700;">
+                      ${room.status.toUpperCase()}
+                </span>
+            </div>
+            <div style="padding:35px;">
+                <div style="margin-bottom:15px;">
+                    <span style="font-size:0.6rem; font-weight:800; color:var(--accent-gold); letter-spacing:2px; text-transform:uppercase;">Luxury Suite ${room.id}</span>
                 </div>
-                <h3>${room.name}</h3>
-                <p style="font-weight:700; color:#333; margin-bottom:15px;">৳${room.price.toLocaleString()} / Night</p>
-                <div style="display:flex; flex-direction:column; gap:10px;">
+                <h3 style="margin-bottom:5px;">${room.name}</h3>
+                <p class="suite-price" style="margin-bottom:25px;">৳${room.price.toLocaleString()} <small style="font-size:0.7rem; color:#888; font-family:var(--font-main);">/ NIGHT</small></p>
+                
+                <div style="display:flex; flex-direction:column; gap:12px;">
                     ${role === 'admin' ? `
-                        <div style="display:flex; gap:5px;">
-                            <button onclick="toggleRoomStatus(${i})" class="btn-staff-sm" style="flex:2;">TOGGLE STATUS</button>
-                            <button onclick="deleteRoom(${i})" class="btn-guest-sm" style="flex:1; color:red; border-color:red;">DEL</button>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <button onclick="showLogistics(${i})" class="btn-staff-sm" style="width:100%;">LOGISTICS</button>
+                            <button onclick="showDetails(${i})" class="btn-guest-sm" style="width:100%;">DETAILS</button>
                         </div>
-                    ` : `
-                        <div style="display:flex; gap:10px;">
+                        <button onclick="deleteRoom(${room.id})" class="btn-guest-sm" style="width:100%; color:#e74c3c; border-color:#e74c3c;">DELETE SUITE</button>
+                        <button onclick="openReviewModal(${i})" class="btn-guest-sm" style="width:100%;">GUEST FEEDBACK</button>
+                    ` : (role === 'guest' ? `
+                        <div style="display:flex; gap:15px;">
+                            <button onclick="showDetails(${i})" class="btn-guest-sm" style="flex:1;">DETAILS</button>
                             ${!isOccupied ? 
-                                `<button onclick="openBookingModal(${i})" class="btn-staff-sm" style="flex:2;">Book Now</button>` : 
-                                `<button onclick="processCheckout(${i})" class="btn-staff-sm" style="flex:2; background:#e74c3c; border-color:#e74c3c; color:white;">Check Out</button>`
+                                `<button onclick="openBookingModal(${i})" class="btn-staff-sm" style="flex:2;">RESERVE NOW</button>` : 
+                                (canCheckout ? `<button onclick="processCheckout(${room.id})" class="btn-staff-sm" style="flex:2; background:#e74c3c; color:white;">CHECK OUT</button>` : 
+                                `<button class="btn-staff-sm" style="flex:2; background:#aaa; cursor:not-allowed; border:none; color:white;" disabled>SUITE OCCUPIED</button>`)
                             }
-                            <button onclick="openReviewModal(${i})" class="btn-guest-sm" style="flex:1;">Review</button>
                         </div>
-                    `}
+                        <button onclick="openReviewModal(${i})" class="btn-guest-sm" style="width:100%;">REVIEWS</button>
+                    ` : `
+                        <div style="display:flex; gap:15px;">
+                            <button onclick="showDetails(${i})" class="btn-guest-sm" style="flex:1;">DETAILS</button>
+                            <a href="login.html" class="btn-staff-sm" style="flex:2; text-align:center;">LOGIN TO RESERVE</a>
+                        </div>
+                        <button onclick="openReviewModal(${i})" class="btn-guest-sm" style="width:100%;">REVIEWS</button>
+                    `)}
                 </div>
             </div>
         </div>`;
     }).join('');
 }
 
-function openBookingModal(index) {
-    const room = rooms[index];
-    const today = new Date().toISOString().split('T')[0];
+async function handleLogin(event, role) {
+    event.preventDefault();
+    const email = document.getElementById(role + "-email")?.value || document.getElementById(role + "-username")?.value;
+    const password = document.getElementById(role + "-password").value;
+
+    const response = await fetch('api.php?action=login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: role, username: email, password: password })
+    });
+    const result = await response.json();
+    if (result.status === 'success') {
+        localStorage.setItem("userRole", result.role);
+        location.href = 'index.html';
+    } else {
+        showStatusModal("Access Denied", result.message, false);
+    }
+}
+
+async function handleSignup() {
+    const name = document.getElementById("reg-name").value;
+    const email = document.getElementById("reg-email").value;
+    const phone = document.getElementById("reg-phone").value;
+    const password = document.getElementById("reg-password").value;
+
+    const response = await fetch('api.php?action=register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, email: email, phone: phone, password: password })
+    });
+    const result = await response.json();
+    if (result.status === "success") {
+        localStorage.setItem("userRole", "guest");
+        location.href = 'index.html';
+    } else {
+        showStatusModal("Registration Error", result.message, false);
+    }
+}
+
+async function openBookingModal(i) {
+    const room = rooms[i];
+    const role = localStorage.getItem("userRole") || "guest";
     
-    // Map current active services into the booking window
-    const servicesHTML = services.map(s => `
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.75rem;">
-            <label style="cursor:pointer;"><input type="checkbox" class="svc-check" value="${s.price}" onchange="updateTotal(${room.price})"> ${s.name}</label>
-            <span style="color:#666;">+৳${s.price}</span>
-        </div>`).join('');
+    if (role !== 'guest') {
+        showStatusModal("Access Restricted", "Only registered residents can finalize suite bookings.", false);
+        return;
+    }
 
     showModal(`
-        <h3 style="margin-bottom:15px;">Reservation: ${room.name}</h3>
-        <label style="font-size:0.6rem; font-weight:bold; color:#888;">GUEST NAME</label>
-        <input type="text" id="gName" class="login-field" placeholder="Full legal name">
+        <h3 style="font-family:var(--font-serif); font-style:italic; margin-bottom:10px;">Reserve ${room.name}</h3>
+        <p style="font-size:0.8rem; color:#888; margin-bottom:25px;">Luxury accommodation at ৳${room.price.toLocaleString()} / night</p>
         
-        <label style="font-size:0.6rem; font-weight:bold; color:#888; margin-top:10px; display:block;">CONTACT NO</label>
-        <input type="text" id="gPhone" class="login-field" placeholder="01XXX-XXXXXX" style="margin-bottom:15px;">
+        <div class="input-group">
+            <label>Check-in Date</label>
+            <input type="date" id="checkin" class="login-field" value="${new_date()}">
+        </div>
+        <div class="input-group" style="margin-top:15px;">
+            <label>Nights of Stay</label>
+            <input type="number" id="nights" class="login-field" value="1" min="1">
+        </div>
         
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <div style="flex:1;">
-                <label style="font-size:0.6rem; font-weight:bold; color:#888;">DATE</label>
-                <input type="date" id="gDate" class="login-field" value="${today}">
-            </div>
-            <div style="flex:1;">
-                <label style="font-size:0.6rem; font-weight:bold; color:#888;">NIGHTS</label>
-                <input type="number" id="gDays" class="login-field" value="1" min="1" oninput="updateTotal(${room.price})">
+        <div style="margin-top:25px; padding:20px; background:#f9f9f9; border-radius:8px;">
+            <p style="font-size:0.6rem; font-weight:800; color:#aaa; letter-spacing:1px; margin-bottom:10px;">SELECT ADD-ONS</p>
+            <div id="bookingServices">
+                ${services.map(s => `
+                    <label style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem; cursor:pointer;">
+                        <span><input type="checkbox" value="${s.id}" data-price="${s.price}" onchange="updateBookingTotal(${room.price})"> ${s.name}</span>
+                        <span style="color:var(--accent-gold);">+৳${s.price.toLocaleString()}</span>
+                    </label>
+                `).join('')}
             </div>
         </div>
 
-        <div style="text-align:left; margin-bottom:15px; border-top:1px solid #eee; padding-top:10px;">
-            <p style="font-size:0.6rem; font-weight:800; color:#888; margin-bottom:10px;">EXTRA AMENITIES</p>
-            ${servicesHTML}
+        <div style="margin-top:25px; border-top:2px solid #eee; padding-top:20px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.7rem; font-weight:800; color:#888; letter-spacing:1px; text-transform:uppercase;">Estimated Total</span>
+            <span id="bookingTotal" style="font-size:1.5rem; font-weight:800; color:var(--primary-dark);">৳${room.price.toLocaleString()}</span>
         </div>
 
-        <div style="background:#f4f4f4; padding:20px; border-radius:6px; margin-bottom:15px; text-align:center; border:1px solid #e0e0e0;">
-            <span style="font-size:0.6rem; color:#666; font-weight:bold;">ESTIMATED TOTAL BILL</span>
-            <div style="font-size:1.6rem; font-weight:800; color:#2ecc71; margin-top:5px;">৳<span id="calcAmount">${room.price.toLocaleString()}</span></div>
-        </div>
-        <button onclick="processBooking(${index})" class="btn-staff-sm" style="width:100%; padding:12px;">Confirm Reservation</button>
+        <button onclick="confirmBooking(${i})" class="btn-staff-sm" style="width:100%; margin-top:25px; background:var(--accent-gold); color:white; border:none;">CONFIRM RESIDENCE</button>
     `);
-}
-
-function updateTotal(base) {
-    const days = parseInt(document.getElementById('gDays').value) || 1;
-    let total = base * days;
     
-    // Add logic for service checkboxes
-    document.querySelectorAll('.svc-check:checked').forEach(c => {
-        total += parseInt(c.value);
+    // Add real-time update for nights
+    document.getElementById("nights").addEventListener("input", () => updateBookingTotal(room.price));
+}
+
+function updateBookingTotal(roomPrice) {
+    const nights = parseInt(document.getElementById("nights").value) || 1;
+    const roomCost = roomPrice * nights;
+    
+    let serviceCost = 0;
+    const svcCheckboxes = document.querySelectorAll("#bookingServices input:checked");
+    svcCheckboxes.forEach(cb => {
+        serviceCost += parseFloat(cb.getAttribute("data-price"));
     });
-
-    const display = document.getElementById('calcAmount');
-    if (display) display.innerText = total.toLocaleString();
+    
+    const total = roomCost + serviceCost;
+    const display = document.getElementById("bookingTotal");
+    if (display) display.innerText = "৳" + total.toLocaleString();
 }
 
-function processBooking(i) {
-    const name = document.getElementById("gName").value;
-    const phone = document.getElementById("gPhone").value;
-    const days = document.getElementById("gDays").value || 1;
-    const finalBill = document.getElementById("calcAmount").innerText.replace(/,/g, '');
+function new_date() {
+    const d = new Date();
+    return d.toISOString().split('T')[0];
+}
 
-    if (!name || !phone) {
-        alert("CRITICAL ERROR: Please provide both Guest Name and Phone Number.");
-        return;
-    }
+async function confirmBooking(i) {
+    const checkin = document.getElementById("checkin").value;
+    const nights = parseInt(document.getElementById("nights").value) || 1;
+    const svcCheckboxes = document.querySelectorAll("#bookingServices input:checked");
+    const selectedServices = Array.from(svcCheckboxes).map(cb => cb.value);
+    
+    // Calculate final total again safely
+    const roomPrice = rooms[i].price;
+    let totalAmount = roomPrice * nights;
+    svcCheckboxes.forEach(cb => { totalAmount += parseFloat(cb.getAttribute("data-price")); });
 
-    // Push new guest record to memory
-    records.push({ 
-        id: Date.now(), 
-        guestName: name, 
-        phone: phone, 
-        suite: rooms[i].name, 
-        nights: days, 
-        totalAmount: parseInt(finalBill), 
-        date: document.getElementById("gDate").value 
+    const response = await fetch('api.php?action=book_room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            roomId: rooms[i].id, 
+            date: checkin, // api.php expects 'date'
+            nights: nights,
+            totalAmount: totalAmount, // api.php expects 'totalAmount'
+            services: selectedServices,
+            // Logged in user info will be grabbed by session in api.php
+            name: currentUser ? currentUser.name : '', 
+            phone: currentUser ? currentUser.phone : ''
+        })
     });
-
-    rooms[i].status = "Occupied";
-    saveData();
-    alert("Reservation Confirmed! Database Updated.");
-    location.reload();
-}
-
-function processCheckout(i) {
-    if (confirm(`Finalize Check-out for ${rooms[i].name}? Unit will be cleaned and reset.`)) {
-        rooms[i].status = "Available";
-        saveData();
-        location.reload();
+    
+    const result = await response.json();
+    if (result.status === 'success') {
+        showStatusModal("Booking Pending", "Your residence request has been initialized and is pending admin approval. Welcome to Urban Nest.");
+        fetchInitialData();
+        const modal = document.querySelector('.modal');
+        if (modal) modal.remove();
+    } else {
+        showStatusModal("Booking Failed", result.message || "Request rejected by server.", false);
     }
 }
 
-/* =========================================
-   4. STAFF MANAGEMENT (SERVICES & INVENTORY)
-   ========================================= */
+async function processCheckout(roomId) {
+    if (confirm(`Finalize Check-out? Unit will be cleaned and reset.`)) {
+        await fetch('api.php?action=checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId: roomId })
+        });
+        showStatusModal("Check-out Complete", "The suite has been released and reset to inventory.");
+        fetchInitialData();
+    }
+}
 
-/**
- * addRoom handles adding new suites to the system.
- */
-function addRoom() {
+async function addRoom() {
     const name = document.getElementById("roomName").value;
     const price = document.getElementById("roomPrice").value;
-    const img = document.getElementById("roomImg").value || "https://images.unsplash.com/photo-1611892440504-42a792e24d32?q=80&w=1000";
 
     if (!name || !price) {
-        alert("Error: Suite Name and Nightly Rate are mandatory.");
+        showStatusModal("Incomplete Data", "Suite Name and Nightly Rate are mandatory.", false);
         return;
     }
 
-    rooms.push({ 
-        id: Math.floor(Math.random() * 900) + 100, 
-        name: name, 
-        price: parseInt(price), 
-        status: "Available", 
-        img: img 
+    await fetch('api.php?action=add_room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, price: price })
     });
-
-    saveData();
-    alert("New suite added to inventory.");
-    location.reload();
+    showStatusModal("Inventory Update", "New luxury suite added to the collection.");
+    fetchInitialData();
 }
 
-function deleteRoom(i) {
+async function deleteRoom(id) {
     if (confirm("Permanently remove this suite from Urban Nest inventory?")) {
-        rooms.splice(i, 1);
-        saveData();
-        renderUI();
+        await fetch('api.php?action=delete_room', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        showStatusModal("Inventory Update", "Suite successfully removed from local records.");
+        fetchInitialData();
     }
 }
 
-function toggleRoomStatus(i) {
-    rooms[i].status = (rooms[i].status === "Available" ? "Occupied" : "Available");
-    saveData();
-    renderUI();
+async function toggleRoomStatus(id) {
+    await fetch('api.php?action=toggle_room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id })
+    });
+    fetchInitialData();
 }
 
-/**
- * Service Manager logic handles the menu of extra amenities.
- */
 function renderServiceManager() {
     const list = document.getElementById("serviceList");
-    if (!list) return; // Exit if we aren't on the services.html page
+    if (!list) return;
 
     if (services.length === 0) {
         list.innerHTML = `<p style="color: #bbb; text-align: center; padding: 20px;">No services currently configured.</p>`;
@@ -280,7 +441,7 @@ function renderServiceManager() {
                 <span style="font-weight:700; display:block; color: #333;">${s.name}</span>
                 <span style="font-size:0.75rem; color:#888;">Standard Charge: ৳${s.price.toLocaleString()}</span>
             </div>
-            <button onclick="removeService(${i})" 
+            <button onclick="removeService(${s.id})" 
                     style="color:#e74c3c; background:#fdf2f2; border:1px solid #fee2e2; border-radius: 4px; padding: 5px 12px; cursor:pointer; font-size:0.8rem; font-weight:bold; transition: 0.2s;"
                     onmouseover="this.style.background='#fde2e2'" 
                     onmouseout="this.style.background='#fdf2f2'">
@@ -289,109 +450,172 @@ function renderServiceManager() {
         </div>`).join('');
 }
 
-/* =========================================
-   FIXED SERVICE MANAGEMENT
-   ========================================= */
-
-function addService() {
-    // 1. Grab the elements
+async function addService() {
     const nameInput = document.getElementById("svcName");
     const priceInput = document.getElementById("svcPrice");
 
-    // 2. Debugging: Check if elements even exist in your HTML
-    if (!nameInput || !priceInput) {
-        console.error("HTML Error: Could not find inputs with IDs 'svcName' or 'svcPrice'");
-        alert("System Error: Input fields not found in HTML. Check your IDs!");
-        return;
-    }
+    if (!nameInput || !priceInput) return;
 
-    // 3. Validation
     const nameValue = nameInput.value.trim();
     const priceValue = parseInt(priceInput.value);
 
     if (!nameValue || isNaN(priceValue)) {
-        alert("Please enter a valid Service Name and Price.");
+        showStatusModal("Validation Error", "Please enter a valid Service Name and Price.", false);
         return;
     }
 
-    // 4. Update the Data Array
-    const newService = { 
-        name: nameValue, 
-        price: priceValue 
-    };
+    await fetch('api.php?action=add_service', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameValue, price: priceValue })
+    });
     
-    services.push(newService);
-
-    // 5. Save and Refresh
-    saveData(); // Uses the central save function from the previous code
-    
-    // Clear the inputs for the next entry
     nameInput.value = "";
     priceInput.value = "";
-    
-    // Refresh the UI list
-    renderUI();
-    
-    alert(`Success: ${nameValue} has been added to the service menu.`);
+    fetchInitialData();
+    showStatusModal("Service Created", `${nameValue} has been integrated into the resident menu.`);
 }
 
-/**
- * removeService: Permanently deletes a service from the database.
- * @param {number} i - The index of the service in the array.
- */
-function removeService(i) {
-    // 1. Ask for confirmation so you don't delete by accident during a demo
-    const confirmation = confirm(`Are you sure you want to remove "${services[i].name}"?`);
-    
-    if (confirmation) {
-        // 2. Remove the specific service from the array
-        services.splice(i, 1);
-        
-        // 3. Save the updated list to LocalStorage
-        saveData(); 
-        
-        // 4. Refresh the UI so the item disappears immediately
-        renderUI();
-        
-        console.log("Service removed successfully.");
+async function removeService(id) {
+    if (confirm(`Are you sure you want to remove this service?`)) {
+        await fetch('api.php?action=delete_service', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        showStatusModal("Service Updated", "Additional service removed from the catalog.");
+        fetchInitialData();
     }
 }
 
-/**
- * Customer Table handles the history of all bookings.
- */
 function renderCustomerTable() {
     const tbody = document.querySelector("#customerTable tbody");
     if (!tbody) return;
 
     if (records.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">No resident records found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">No resident records found.</td></tr>`;
         return;
     }
 
     tbody.innerHTML = records.map((r, i) => `
         <tr>
-            <td style="font-weight:700;">#${r.id.toString().slice(-4)}</td>
-            <td>${r.guestName} <br><small style="color:#888; font-family:monospace;">${r.phone || ''}</small></td>
-            <td>${r.suite} <span style="font-size:0.7rem; color:#bbb;">(${r.nights} nights)</span></td>
-            <td style="font-weight:800; color:#2ecc71;">৳${r.totalAmount.toLocaleString()}</td>
-            <td><button onclick="removeRecord(${i})" style="color:#e74c3c; border:none; background:none; cursor:pointer; font-weight:bold;">ARCHIVE</button></td>
+            <td style="font-weight:700;">#C-${r.customerId.toString().padStart(4, '0')}</td>
+            <td>${r.guestName}</td>
+            <td style="color:var(--text-gray); font-size:0.85rem;">${r.email}</td>
+            <td style="font-family:monospace; color:var(--text-gray);">${r.phone || 'N/A'}</td>
         </tr>`).join('');
 }
 
-function removeRecord(i) {
-    if (confirm("Archive this guest record permanently?")) {
-        records.splice(i, 1);
-        saveData();
-        renderUI();
+async function addCustomer() {
+    const name = document.getElementById("custName").value;
+    const email = document.getElementById("custEmail").value;
+    const phone = document.getElementById("custPhone").value;
+    const password = document.getElementById("custPass").value;
+
+    if (!name || !email || !password) {
+        showStatusModal("Incomplete Data", "Name, Email, and Password are required.", false);
+        return;
+    }
+
+    await fetch('api.php?action=add_customer_admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, phone, password })
+    });
+    showStatusModal("Guest Added", "New guest record added to the database.");
+    fetchInitialData();
+    
+    document.getElementById("custName").value = "";
+    document.getElementById("custEmail").value = "";
+    document.getElementById("custPhone").value = "";
+    document.getElementById("custPass").value = "";
+}
+
+function renderApprovalsPage() {
+    const tbody = document.querySelector("#approvalsTable tbody");
+    if (!tbody) return;
+
+    if (pendingBookings.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:40px; color:#aaa;">No pending check-in requests.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = pendingBookings.map(b => `
+        <tr>
+            <td style="font-weight:700;">#B-${b.id}</td>
+            <td style="font-family:var(--font-serif); font-style:italic;">${b.guestName}</td>
+            <td>${b.suite}</td>
+            <td>${b.date} (${b.nights} nights)</td>
+            <td style="font-weight:800; color:var(--primary-dark);">৳${b.totalAmount.toLocaleString()}</td>
+            <td>
+                <button onclick="approveBooking(${b.id})" class="btn-staff-sm" style="background:#2ecc71; color:white; border:none; padding:5px 10px; margin-right:5px;">ACCEPT</button>
+                <button onclick="rejectBooking(${b.id})" class="btn-staff-sm" style="background:#e74c3c; color:white; border:none; padding:5px 10px;">REJECT</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function approveBooking(id) {
+    if (confirm("Approve this check-in request?")) {
+        await fetch('api.php?action=approve_booking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        showStatusModal("Check-in Approved", "The booking is confirmed and the invoice has been generated.");
+        fetchInitialData();
     }
 }
 
-/* =========================================
-   5. REVIEWS & RATINGS SYSTEM
-   ========================================= */
+async function rejectBooking(id) {
+    if (confirm("Reject this check-in request?")) {
+        await fetch('api.php?action=reject_booking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        showStatusModal("Check-in Rejected", "The booking was rejected and the room is available again.");
+        fetchInitialData();
+    }
+}
+
+async function approvePayment(id) {
+    if (confirm("Approve this resident's payment?")) {
+        try {
+            const response = await fetch('api.php?action=approve_payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                showStatusModal("Bill Settled", "The resident's payment has been officially processed and recorded.");
+                await fetchInitialData();
+                setTimeout(() => window.location.reload(), 1500); 
+            } else {
+                showStatusModal("Processing Error", result.message || "Failed to approve payment.", false);
+            }
+        } catch (e) {
+            console.error("Payment Approval Error:", e);
+            showStatusModal("Network Error", "Could not connect to the financial management system.", false);
+        }
+    }
+}
+
+async function removeRecord(id) {
+    if (confirm("Archive this guest record permanently?")) {
+        await fetch('api.php?action=archive_record', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: id })
+        });
+        showStatusModal("Archive Updated", "Guest record moved to historical archives.");
+        fetchInitialData();
+    }
+}
 
 function openReviewModal(i) {
+    activeRating = 0; // Reset rating state for new modal
     const roomReviews = reviews.filter(r => r.suite === rooms[i].name);
     
     const listHTML = roomReviews.map(r => `
@@ -400,52 +624,62 @@ function openReviewModal(i) {
             <p style="font-size:0.8rem; font-style:italic; color:#555;">"${r.comment}"</p>
         </div>`).join('') || "<p style='color:#ccc; padding:20px 0;'>No reviews yet for this suite.</p>";
 
+    const role = localStorage.getItem("userRole") || "guest";
+    
     showModal(`
-        <h3>Resident Reviews: ${rooms[i].name}</h3>
+        <h3 style="font-family:var(--font-serif); font-style:italic; margin-bottom:15px;">Resident Feedback</h3>
+        <p style="font-size:0.7rem; color:var(--accent-gold); letter-spacing:2px; font-weight:700; margin-bottom:20px;">${rooms[i].name.toUpperCase()}</p>
         <div style="max-height:180px; overflow-y:auto; border-bottom:1px solid #eee;">${listHTML}</div>
         
-        <div style="margin-top:20px; background:#f9f9f9; padding:20px; border-radius:10px; border:1px solid #eee;">
-            <p style="font-size:0.6rem; font-weight:800; color:#888; margin-bottom:10px;">RATE YOUR EXPERIENCE</p>
-            <div style="font-size:1.8rem; cursor:pointer; color:#ddd; margin-bottom:15px; letter-spacing:5px;">
-                ${[1,2,3,4,5].map(n => `<span onclick="setStar(${n})" class="star-btn" style="transition:0.2s;">★</span>`).join('')}
+        ${role === 'guest' ? `
+            <div style="margin-top:25px; background:#fcfcfc; padding:25px; border:1px solid #eee;">
+                <p style="font-size:0.6rem; font-weight:800; color:#888; margin-bottom:15px; letter-spacing:2px;">RATE YOUR RESIDENCE</p>
+                <div style="font-size:2.2rem; cursor:pointer; color:#ddd; margin-bottom:15px; letter-spacing:8px;">
+                    ${[1,2,3,4,5].map(n => `<span onclick="setStar(${n})" class="star-btn" style="transition:0.3s; display:inline-block;">★</span>`).join('')}
+                </div>
+                <textarea id="revText" class="login-field" placeholder="Share your experience..." style="height:80px; width:100%;"></textarea>
+                <button onclick="saveReview(${i})" class="btn-staff-full" style="width:100%; margin-top:20px; background:var(--primary-dark); color:white; border:none; cursor:pointer;">SUBMIT FEEDBACK</button>
             </div>
-            <textarea id="revText" class="login-field" placeholder="Share your feedback with future residents..." style="height:70px;"></textarea>
-            <button onclick="saveReview(${i})" class="btn-staff-sm" style="width:100%; margin-top:10px; background:#111; color:#fff; border:none;">Submit Review</button>
-        </div>`);
+        ` : `
+            <div style="margin-top:20px; background:#f4f4f4; padding:20px; text-align:center; color:#888; border:1px dashed #ccc;">
+                <p style="font-size:0.65rem; font-weight:800; letter-spacing:2px;">STAFF MODE</p>
+                <small>Internal feedback is currently locked for administrators.</small>
+            </div>
+        `}`);
 }
 
 function setStar(n) {
     activeRating = n;
     const stars = document.querySelectorAll('.star-btn');
-    stars.forEach((s, i) => s.style.color = i < n ? '#f1c40f' : '#ddd');
+    stars.forEach((s, i) => {
+        s.style.color = i < n ? '#f1c40f' : '#ddd';
+        s.style.transform = i < n ? 'scale(1.1)' : 'scale(1)';
+    });
 }
 
-function saveReview(i) {
+async function saveReview(i) {
     const comment = document.getElementById("revText").value;
     
     if (!activeRating) {
-        alert("Please select a star rating before submitting.");
+        showStatusModal("Rating Required", "Please select a star rating before submitting your feedback.", false);
         return;
     }
 
-    reviews.push({ 
-        suite: rooms[i].name, 
-        rating: activeRating, 
-        comment: comment || "Great stay!" 
+    await fetch('api.php?action=add_review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            roomId: rooms[i].id, 
+            rating: activeRating, 
+            comment: comment || "Exceptional stay!" 
+        })
     });
 
-    saveData();
-    alert("Feedback Submitted! Thank you.");
-    location.reload();
+    showStatusModal("Feedback Recorded", "Your review has been successfully submitted. We appreciate your feedback.");
+    fetchInitialData();
+    document.querySelector('.modal').remove();
 }
 
-/* =========================================
-   6. UI UTILITIES & MODAL ENGINE
-   ========================================= */
-
-/**
- * showModal handles the creation and styling of full-screen overlays.
- */
 function showModal(content) {
     const existing = document.querySelector('.modal');
     if (existing) existing.remove();
@@ -453,21 +687,19 @@ function showModal(content) {
     const m = document.createElement('div');
     m.className = 'modal';
     
-    // Applying CSS-in-JS for isolation
     m.style.cssText = `
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.85); display: flex;
         justify-content: center; align-items: center; z-index: 1000;
-        animation: fadeIn 0.3s ease;
+        animation: fadeIn 0.3s ease; backdrop-filter: blur(8px);
     `;
 
     m.innerHTML = `
-        <div class="modal-content" style="background:#fff; padding:35px; border-radius:12px; width:90%; max-width:420px; position:relative; box-shadow:0 15px 35px rgba(0,0,0,0.4);">
-            <span onclick="this.parentElement.parentElement.remove()" style="position:absolute; right:15px; top:10px; cursor:pointer; font-size:2rem; color:#ccc;">&times;</span>
+        <div class="modal-content" style="background:#fff; padding:45px; width:95%; max-width:500px; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 30px 60px rgba(0,0,0,0.4); border-top: 5px solid var(--accent-gold);">
+            <span onclick="this.parentElement.parentElement.remove()" style="position:absolute; right:20px; top:15px; cursor:pointer; font-size:1.8rem; color:#bbb; transition:0.3s;" onmouseover="this.style.color='var(--accent-gold)'" onmouseout="this.style.color='#bbb'">&times;</span>
             ${content}
         </div>`;
-    
     document.body.appendChild(m);
 }
 
-// Global script end. Urban Nest Suite Management System.
+// End of cleaned Urban Nest script.
