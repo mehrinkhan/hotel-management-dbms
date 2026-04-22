@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room Inventory | Urban Nest</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=999">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo-container">
+            <img src="logo.png" alt="Urban Nest" class="main-logo-lg">
+        </div>
+        <nav>
+            <ul id="nav-menu">
+                <li><a href="index.html">Dashboard</a></li>
+                <li><a href="rooms.html">Suites</a></li>
+                <li class="active admin-only"><a href="roomdb.html">ROOMDB</a></li>
+                <li class="admin-only"><a href="customers.html">GUESTDB</a></li>
+                <li class="admin-only"><a href="approvals.html">Approvals</a></li>
+                <li class="admin-only"><a href="services.html">Services</a></li>
+                <li><a href="payments.html">Payments</a></li>
+            </ul>
+        </nav>
+        <div class="system-access-header">
+            <span id="user-badge">SECURE ACCESS</span>
+            <a href="login.html" class="btn-logout-sm">Sign Out</a>
+        </div>
+    </header>
+
+    <main class="mgmt-section">
+        <div class="table-box" style="max-width: 1200px; margin: 0 auto; padding: 60px;">
+            <h2 style="font-size: 0.7rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 40px; color: var(--accent-gold);">Internal Suite Database (ROOMDB)</h2>
+            
+            <div style="background: #fdfdfd; padding: 25px; margin-bottom: 30px; border: 1px solid #eee; display: flex; gap: 15px; align-items: flex-end;">
+                <div style="flex: 2;">
+                    <label style="font-size: 0.6rem; letter-spacing: 1px; color: #888; font-weight: 800; text-transform: uppercase;">Suite Configuration Name</label>
+                    <input type="text" id="roomName" class="login-field" placeholder="e.g. Royal Penthouse">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 0.6rem; letter-spacing: 1px; color: #888; font-weight: 800; text-transform: uppercase;">Rate / Night (৳)</label>
+                    <input type="number" id="roomPrice" class="login-field" placeholder="e.g. 15000">
+                </div>
+                <div>
+                    <button onclick="addRoom()" class="btn-staff-full" style="height: 48px; background: var(--primary-dark); color: white; border: none; padding: 0 30px;">ADD SUITE</button>
+                </div>
+            </div>
+
+            <table id="roomDBTable" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Suite ID</th>
+                        <th style="width: 40%;">Configuration</th>
+                        <th style="width: 25%;">Rate / Night</th>
+                        <th style="width: 20%;">Live Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Populated by script.js -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="script.js?v=999"></script>
+    <script>
+        function renderRoomDBPage() {
+            const tbody = document.querySelector("#roomDBTable tbody");
+            if (!tbody) return;
+            const roomsData = JSON.parse(localStorage.getItem("un_rooms")) || [];
+
+            if (roomsData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#aaa;">No room records syncronized.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = roomsData.map(r => `
+                <tr>
+                    <td style="font-weight:700;">#R-${r.id.toString().padStart(3, '0')}</td>
+                    <td style="font-family:var(--font-serif); font-style:italic;">${r.name}</td>
+                    <td style="font-weight:800; color:var(--primary-dark);">৳${r.price.toLocaleString()}</td>
+                    <td>
+                        <span class="status-badge" style="background:${r.status === 'Available' ? '#2ecc71' : '#e74c3c'}; color:white; font-weight:bold; font-size:0.55rem; text-transform:uppercase; display:inline-block; padding:5px 12px; letter-spacing:1px;">
+                            ${r.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        window.onload = () => {
+            if(typeof initApp === "function") initApp();
+            renderRoomDBPage();
+        };
+    </script>
+</body>
+</html>
