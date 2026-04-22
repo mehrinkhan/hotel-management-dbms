@@ -1,271 +1,490 @@
 /* =========================================
-   1. GLOBAL SETTINGS & BRANDING
+   1. PREMIUM DESIGN SYSTEM & VARIABLES
    ========================================= */
 :root {
-    --urban-gray: #545454;
-    --dark-text: #333333;
-    --light-gray: #888888;
-    --white: #ffffff;
-    --light-bg: #fafafa;
-    --border-color: #eeeeee;
-    --gold: #f1c40f;
-    --accent-red: #ff4d4d;
-    --font-main: 'Be Vietnam Pro', sans-serif;
-    --font-serif: 'Playfair Display', serif;
-    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --primary-dark: #545454;
+    --secondary-dark: #333333;
+    --accent-gold: #c5a059;
+    --accent-gold-hover: #d4b47a;
+    --text-white: #ffffff;
+    --text-gray: #a0a0a0;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --card-bg: #ffffff;
+    --font-main: 'Be Vietnam Pro', sans-serif; 
+    --font-serif: 'Libre Baskerville', serif;  
+    --transition: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    --shadow-premium: 0 20px 40px rgba(0,0,0,0.1);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--primary-dark); }
+::-webkit-scrollbar-thumb { background: var(--accent-gold); border-radius: 10px; }
 
 body {
     font-family: var(--font-main);
-    background-color: var(--white);
-    color: var(--urban-gray);
-    line-height: 1.6;
+    background-color: #fdfdfd;
+    color: var(--primary-dark);
+    line-height: 1.7;
     overflow-x: hidden;
 }
 
 /* =========================================
-   2. NAVIGATION (BIGGER LOGO: 120px)
+   2. NAVIGATION (GLASSMORPHIC)
    ========================================= */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 5%; 
+    padding: 45px 8%; 
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border-color);
-    background: var(--white);
     position: sticky;
     top: 0;
     z-index: 1000;
+    transition: var(--transition);
+}
+
+.navbar.scrolled {
+    padding: 20px 8%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.logo-container {
+    perspective: 1000px;
 }
 
 .main-logo-lg {
-    height: 120px; 
+    height: 45px; 
     width: auto;
     transition: var(--transition);
 }
 
-nav ul { display: flex; gap: 30px; list-style: none; }
+
+nav ul { 
+    display: flex; 
+    gap: 35px; /* Reduced from 60px for tighter grouping */
+    list-style: none; 
+}
 
 nav ul li a {
     text-decoration: none;
-    color: var(--urban-gray);
-    font-size: 0.7rem;
-    font-weight: 700;
+    color: var(--primary-dark);
+    font-size: 0.75rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
+    position: relative;
+    transition: var(--transition);
+    opacity: 0.7;
+}
+
+nav ul li a:hover, nav ul li.active a {
+    opacity: 1;
+    color: var(--accent-gold);
+}
+
+nav ul li a::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--accent-gold);
+    transition: var(--transition);
+}
+
+nav ul li a:hover::after, nav ul li.active a::after {
+    width: 100%;
+}
+
+.system-access-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
 #user-badge {
-    font-size: 0.55rem;
-    font-weight: 900;
-    background: #f4f4f4;
-    padding: 6px 12px;
-    color: #555;
-    margin-right: 15px;
-    letter-spacing: 1px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    background: var(--primary-dark);
+    color: #ffffff !important;
+    padding: 8px 16px;
+    letter-spacing: 2px;
     text-transform: uppercase;
+    border-radius: 4px;
 }
 
 /* =========================================
-   3. HERO SECTION (RESTORED IMAGE)
+   3. HERO SECTION (DYNAMIC PARALLAX)
    ========================================= */
 .hero {
-    height: 65vh;
-    background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), 
-                url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2000') center/cover no-repeat;
+    height: 85vh;
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.4)), 
+                url('https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2000') center/cover no-repeat;
     display: flex; 
     flex-direction: column;
     justify-content: center; 
     align-items: center; 
     color: white; 
     text-align: center;
-    border-bottom: 5px solid var(--urban-gray);
+    overflow: hidden;
+    position: relative;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(to top, #fdfdfd, transparent);
 }
 
 .hero h1 { 
-    font-size: 4.5rem; 
+    font-family: var(--font-main); /* Changed to Be Vietnam Pro */
+    font-size: 5.5rem; 
     text-transform: uppercase; 
     letter-spacing: 15px; 
-    font-weight: 700;
-    margin-bottom: 10px;
-    text-shadow: 2px 2px 15px rgba(0,0,0,0.4);
+    font-weight: 800; /* Made bolder for high-end impact */
+    font-style: normal; /* Removed italic for the main title */
+    margin-bottom: 20px;
+    animation: fadeInUp 1.2s ease;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+@keyframes shine {
+    to { background-position: 200% center; }
 }
 
 .hero p {
-    font-size: 0.8rem;
-    letter-spacing: 6px;
-    font-weight: 400;
+    font-size: 0.9rem;
+    letter-spacing: 8px;
+    font-weight: 300;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.9);
+    color: rgba(255,255,255,0.85);
+    animation: fadeInUp 1.5s ease;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* =========================================
-   4. DASHBOARD & CARDS
+   4. DASHBOARD & CARDS (ELEVATED)
    ========================================= */
-.welcome-intro { padding: 80px 15%; text-align: center; }
+.welcome-intro { 
+    padding: 120px 15% 60px; 
+    text-align: center; 
+}
 
 .playfair-text {
     font-family: var(--font-serif);
-    font-size: 1.3rem;
-    line-height: 2;
-    color: #333;
-    font-style: italic;
-    max-width: 1000px;
+    font-size: 1.8rem;
+    line-height: 1.6;
+    color: var(--primary-dark);
+    max-width: 900px;
     margin: 0 auto;
+    font-weight: 400; 
+    font-style: italic; 
 }
 
-.mgmt-section { padding: 60px 5%; background: var(--light-bg); min-height: 500px; }
+.mgmt-section { 
+    padding: 60px 8% 120px; 
+    min-height: 600px; 
+}
 
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 30px;
-    max-width: 1200px;
-    margin: 0 auto;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 40px;
+    max-width: 1400px;
+    margin: 40px auto 0;
 }
 
 .mgmt-card {
     background: white; 
-    padding: 45px; 
-    border: 1px solid var(--border-color);
+    padding: 60px 40px; 
+    border-radius: 0;
+    border: 1px solid rgba(0,0,0,0.05);
     text-align: center; 
     transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.02);
 }
 
-.mgmt-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,0,0,0.06); }
+.mgmt-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--accent-gold);
+    transform: scaleX(0);
+    transition: var(--transition);
+    transform-origin: left;
+}
+
+.mgmt-card:hover { 
+    transform: translateY(-15px); 
+    box-shadow: 0 30px 60px rgba(0,0,0,0.12); 
+}
+
+.mgmt-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+    transform: skewX(-25deg);
+    transition: 0.75s;
+}
+
+.mgmt-card:hover::after {
+    left: 150%;
+}
+
+.mgmt-card h3 {
+    font-family: var(--font-main); /* Be Vietnam Pro */
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    color: var(--primary-dark);
+    font-style: normal;
+}
+
+.mgmt-section #roomGrid .mgmt-card h3 {
+    font-family: var(--font-serif) !important; /* Libre Baskerville */
+    font-size: 1.8rem;
+    font-style: italic;
+    font-weight: 400;
+    text-transform: none; 
+    letter-spacing: 0.5px;
+    color: var(--primary-dark);
+    margin-top: 15px;
+}
+
+.mgmt-card p {
+    color: var(--text-gray);
+    font-size: 0.95rem;
+    margin-bottom: 30px;
+}
 
 /* =========================================
-   5. STAR RATING SYSTEM
-   ========================================= */
-.star-rating { 
-    font-size: 2.5rem; 
-    margin: 20px 0; 
-    text-align: center; 
-}
-
-.star { 
-    cursor: pointer; 
-    color: #ddd; 
-    transition: 0.2s ease-in-out; 
-    padding: 0 5px; 
-    display: inline-block;
-}
-
-.star.active { 
-    color: var(--gold); 
-    transform: scale(1.1);
-}
-
-/* =========================================
-   6. BUTTONS & UI
+   5. BUTTONS (LUXURY CTA)
    ========================================= */
 .btn-staff-sm, .btn-guest-sm {
     font-family: var(--font-main);
-    font-size: 0.6rem;
-    font-weight: 800;
+    font-size: 0.7rem;
+    font-weight: 700;
     text-transform: uppercase;
-    padding: 14px 22px;
+    padding: 16px 30px;
     cursor: pointer;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
     transition: var(--transition);
-    border: 1.5px solid var(--urban-gray);
     display: inline-block;
     text-decoration: none;
+    border: none;
 }
 
-.btn-staff-sm { background: var(--urban-gray); color: white; }
-.btn-guest-sm { background: transparent; color: var(--urban-gray); }
+.btn-staff-sm { 
+    background: var(--primary-dark); 
+    color: white; 
+}
+
+.btn-staff-sm:hover { 
+    background: var(--accent-gold); 
+    color: var(--primary-dark);
+}
+
+.btn-guest-sm { 
+    background: transparent; 
+    color: var(--primary-dark);
+    border: 1px solid var(--primary-dark);
+}
+
+.btn-guest-sm:hover {
+    background: var(--primary-dark);
+    color: white;
+}
 
 .btn-logout-sm {
     text-decoration: none; 
-    color: var(--accent-red); 
-    font-size: 0.6rem;
-    font-weight: 800; 
-    border: 1.5px solid var(--accent-red); 
-    padding: 8px 15px;
+    color: #e74c3c; 
+    font-size: 0.7rem;
+    font-weight: 700; 
+    border: 1px solid #e74c3c; 
+    padding: 10px 20px;
+    transition: var(--transition);
+    animation: breathing 3s infinite ease-in-out;
+}
+
+@keyframes breathing {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.02); opacity: 1; }
+}
+
+.btn-logout-sm:hover {
+    background: #e74c3c;
+    color: white;
+    animation: none;
 }
 
 /* =========================================
-   7. MODALS & FORMS
+   6. MODALS (GLASSMORPHIC BLUR)
    ========================================= */
 .modal {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); display: flex;
-    justify-content: center; align-items: center; z-index: 2000;
+    background: rgba(0,0,0,0.4) !important;
+    backdrop-filter: blur(15px) !important;
 }
 
 .modal-content {
-    background: white; width: 450px; padding: 45px; position: relative;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+    border-radius: 0 !important;
+    padding: 50px !important;
+    box-shadow: 0 50px 100px rgba(0,0,0,0.5) !important;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
 .login-field {
-    width: 100%;
-    padding: 12px;
-    font-size: 0.9rem;
-    border: 1px solid var(--border-color);
-    background: #fafafa;
-    font-family: inherit;
-    margin-top: 5px;
+    border: none;
+    border-bottom: 1px solid #ddd;
+    background: transparent;
+    padding: 15px 0;
+    transition: var(--transition);
+}
+
+.login-field:focus {
+    outline: none;
+    border-bottom-color: var(--accent-gold);
 }
 
 /* =========================================
-   8. TABLES (BDT ৳)
+   7. TABLES & BADGES
    ========================================= */
-.table-box { background: white; padding: 35px; border: 1px solid var(--border-color); overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 18px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.8rem; }
-th { text-transform: uppercase; color: #aaa; background: #fafafa; letter-spacing: 1px; }
+.table-box { 
+    background: white; 
+    padding: 50px; 
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: var(--shadow-premium);
+}
 
-.status-badge { font-size: 0.55rem; font-weight: 800; padding: 5px 12px; text-transform: uppercase; }
-.status-green { background: #e8f5e9; color: #2e7d32; }
-.status-red { background: #ffebee; color: #c62828; }
+table tr { 
+    transition: var(--transition);
+}
+
+table tr:hover {
+    background: #fdfdfd;
+    transform: scale(1.002);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+th {
+    font-weight: 700;
+    color: var(--primary-dark);
+    border-bottom: 2px solid var(--accent-gold);
+}
+
+th, td {
+    padding: 24px 55px; /* Increased from 30px for more spread out columns */
+    text-align: left;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+
+.status-badge {
+    border-radius: 50px;
+    padding: 6px 15px;
+    font-size: 0.6rem;
+}
 
 /* =========================================
-   9. FOOTER
+   8. FOOTER
    ========================================= */
 footer {
-    padding: 50px 5%; text-align: center;
-    font-size: 0.65rem; color: #bbb;
-    letter-spacing: 2px; text-transform: uppercase;
-    border-top: 1px solid var(--border-color);
-
-    /* =========================================
-   10. SERVICE SELECTION (ADDED ONLY)
-   ========================================= */
-
-.service-box {
-    margin-right: 8px;
-    transform: scale(1.1);
-    cursor: pointer;
+    padding: 80px 5%; 
+    background: var(--primary-dark);
+    color: var(--text-gray);
 }
 
-.service-item {
-    display: flex;
-    align-items: center;
-    font-size: 0.75rem;
-    padding: 6px 0;
-    color: var(--urban-gray);
+footer p {
+    letter-spacing: 4px;
+    font-weight: 300;
 }
 
-.service-container {
-    max-height: 120px;
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-    padding: 10px;
-    margin-top: 10px;
-    background: #fff;
-    border-radius: 4px;
+/* Suite Specific Enhancements */
+.suite-card-premium {
+    border: none !important;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03);
 }
 
-.service-title {
-    font-size: 0.7rem;
-    font-weight: 700;
-    margin-bottom: 8px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: #666;
+.suite-price {
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+    color: var(--accent-gold);
 }
+
+/* Scroll Indicator Animation */
+.scroll-indicator {
+    width: 1px;
+    height: 80px;
+    background: rgba(255,255,255,0.2);
+    margin: 60px auto 0;
+    position: relative;
+    overflow: hidden;
 }
+
+.scroll-indicator::after {
+    content: '';
+    position: absolute;
+    top: -80px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--accent-gold);
+    animation: scrollLine 2.5s infinite cubic-bezier(.76,.05,.86,.06);
+}
+
+@keyframes scrollLine {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(160px); }
+}
+
+.fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: 1s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.fade-in.appear {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Character masking for password-type fields without triggering browser leak detectors */
+.mask-pass {
+    -webkit-text-security: disc !important;
+    font-family: 'Be Vietnam Pro', sans-serif !important;
+}
+
+/* New Animations */
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
